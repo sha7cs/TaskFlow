@@ -1,6 +1,19 @@
-@TaskFlow.Api_HostAddress = http://localhost:5119
+@baseUrl = http://localhost:5119
 
-GET {{TaskFlow.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Get all tasks
+GET {{baseUrl}}/api/tasks
 
-###
+### Create a task
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Learn controllers",
+  "description": "Phase 1 of TaskFlow"
+}
+
+### Get task by id
+GET {{baseUrl}}/api/tasks/1
+
+### Get a task that doesn't exist
+GET {{baseUrl}}/api/tasks/999
