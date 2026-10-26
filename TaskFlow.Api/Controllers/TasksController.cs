@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Core.Entities;
+using TaskFlow.Core.Interfaces;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -7,21 +8,25 @@ namespace TaskFlow.Api.Controllers;
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private static readonly List<TaskItem> _tasks = new();
-    private static int _nextId = 1;
+    private readonly ITaskService _taskService;
 
+    public TasksController(ITaskService taskService)
+    {
+        _taskService = taskService;
+    }
     // GET: api/tasks
     [HttpGet]
-    public ActionResult<List<TaskItem>> GetAll()
+    public async Task<ActionResult<List<TaskItem>>> GetAll()
     {
-        return Ok(_tasks);
+        return Ok(await _taskService.GetAllAsync());
     }
 
-    // GET: api/tasks/5
+// GET: api/tasks/5
     [HttpGet("{id:int}")]
-    public ActionResult<TaskItem> GetById(int id)
+    public async Task<ActionResult<TaskItem>> GetById(int id)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == id);
+        var task = await _taskService.GetByIdAsync(id);
+
         if (task is null)
             return NotFound();
 
@@ -30,37 +35,30 @@ public class TasksController : ControllerBase
 
     // POST: api/tasks
     [HttpPost]
-    public ActionResult<TaskItem> Create(TaskItem task)
+    public async Task<ActionResult<TaskItem>> Create(TaskItem task)
     {
-        task.Id = _nextId++;
-        task.CreatedAt = DateTime.UtcNow;
-        _tasks.Add(task);
-
-        return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
+        var created = await _taskService.CreateAsync(task);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     // PUT: api/tasks/5
     [HttpPut("{id:int}")]
-    public ActionResult Update(int id, TaskItem updatedTask)
+    public async Task<ActionResult> Update(int id, TaskItem updatedTask)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == id);
-        if (task is null)
+        var updated = await _taskService.UpdateAsync(id, updatedTask);
+        if (!updated)
             return NotFound();
-        
-        task.Title = updatedTask.Title;
-        task.Description = updatedTask.Description;
-        task.IsCompleted = updatedTask.IsCompleted;
+
         return NoContent();
     }
 
     // DELETE: api/tasks/5
     [HttpDelete("{id:int}")]
-    public ActionResult Delete(int id)
+    public async Task<ActionResult> Delete(int id)
     {
-        var task = _tasks.FirstOrDefault(t=> t.Id==id);
-        if (task is null)
+        var deleted = await _taskService.DeleteAsync(id);
+        if (!deleted)
             return NotFound();
-        _tasks.Remove(task);
         return NoContent();
     }
 }
