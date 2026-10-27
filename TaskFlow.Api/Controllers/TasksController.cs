@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using TaskFlow.Core.Entities;
 using TaskFlow.Core.Interfaces;
-
+using TaskFlow.Core.DTOs;
 namespace TaskFlow.Api.Controllers;
 
 [ApiController]
@@ -16,14 +15,14 @@ public class TasksController : ControllerBase
     }
     // GET: api/tasks
     [HttpGet]
-    public async Task<ActionResult<List<TaskItem>>> GetAll()
+    public async Task<ActionResult<List<TaskResponse>>> GetAll()
     {
         return Ok(await _taskService.GetAllAsync());
     }
 
-// GET: api/tasks/5
+    // GET: api/tasks/5
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<TaskItem>> GetById(int id)
+    public async Task<ActionResult<TaskResponse>> GetById(int id)
     {
         var task = await _taskService.GetByIdAsync(id);
 
@@ -35,17 +34,19 @@ public class TasksController : ControllerBase
 
     // POST: api/tasks
     [HttpPost]
-    public async Task<ActionResult<TaskItem>> Create(TaskItem task)
+    public async Task<ActionResult<TaskResponse>> Create(CreateTaskRequest request)
     {
-        var created = await _taskService.CreateAsync(task);
+        var created = await _taskService.CreateAsync(request);
+        if (created is null)
+            return BadRequest("Project not found for the given ProjectId.");
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     // PUT: api/tasks/5
     [HttpPut("{id:int}")]
-    public async Task<ActionResult> Update(int id, TaskItem updatedTask)
+    public async Task<ActionResult> Update(int id, UpdateTaskRequest request)
     {
-        var updated = await _taskService.UpdateAsync(id, updatedTask);
+        var updated = await _taskService.UpdateAsync(id, request);
         if (!updated)
             return NotFound();
 
